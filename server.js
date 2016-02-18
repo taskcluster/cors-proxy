@@ -101,9 +101,10 @@ export function run(port = 80) {
 
     const server = http.createServer(app);
 
-    server.listen(port, () => accept(server));
-
-    debug('Cors proxy running');
+    server.listen(port, () => {
+      debug('Cors proxy running');
+      accept(server);
+    });
   });
 }
 
