@@ -1,0 +1,35 @@
+{
+  "name": "cors-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Provide access to remote websites.",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "babel-node server.js",
+    "test": "node_modules/.bin/mocha --bail test/server_test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taskcluster/cors-proxy.git"
+  },
+  "keywords": [
+    "cors",
+    "proxy",
+    "taskcluster"
+  ],
+  "author": "Wander Lairson Costa <wcosta@mozilla.com> (https://walac.github.io)",
+  "license": "MPL 2.0",
+  "bugs": {
+    "url": "https://github.com/taskcluster/cors-proxy/issues"
+  },
+  "homepage": "https://github.com/taskcluster/cors-proxy#readme",
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "debug": "^2.2.0",
+    "express": "^4.13.4",
+    "express-validation": "^0.4.5"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "libs": [
+    "ecma6",
+  ],
+  "plugins": {
+    "node": {},
+    "module": {},
+    "es_modules": {},
+    "node_resolve": {},
+  }
+}
