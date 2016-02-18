@@ -11,7 +11,7 @@ cors-proxy.
 
 cors-proxy exposes the `/request` endpoint. You make a POST request to this
 endpoint and in the request body, you pass the remote website request
-parameters, in [json](http://www.json.org/).
+parameters, in [json](http://www.json.org/) format.
 
 ```javascript
 $.ajax({
@@ -19,27 +19,19 @@ $.ajax({
   method: 'POST',
   contentType: 'application/json',
   data: {
-    hostname: 'queue.taskcluster.net',
-    path: '/v1/ping'
+    url: 'https://queue.taskcluster.net/v1/ping',
   }
 }).done(function(res) {
   console.log(res);
 });
 ```
 
-The parameters accepted are the same as
-[nodejs http.request](https://nodejs.org/api/http.html#http_http_request_options_callback).
+The request accepts the following parameters, from which only `url` is required.
 
 Paramater    | Description
 -------------|------------
-Hostname     | The host name to connect with
-path         | Endpoint
+url          | Remote URL to connect to
 method       | One of the http standards [verbs](https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html)
-port         | Port number to connect
-headers      | Additional http headers to send.
-data         | Body text.
-
-cors-proxy will use the same protocol to connect as it received the requested at.
-So, to make a new request on https, you have to use the url
-`https://cors-proxy.taskcluster.net/request`.
+headers      | Additional http headers to send
+data         | Body text
 

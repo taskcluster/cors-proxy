@@ -4,33 +4,22 @@ suite('server test', async function() {
   const http = require('http');
   const assert = require('assert');
 
-  const httpPort = 3000;
-  const httpsPort = 3001;
+  const port = 3000;
 
-  const protocols = [
-    {
-      protocol: http,
-      port: httpPort
-    },
-  ];
-
-  let servers;
+  let server;
 
   setup(async function() {
-    servers = await proxyServer.run(httpPort, httpsPort);
+    server = await proxyServer.run(port);
   });
 
-  teardown(function() {
-    for (let server of servers) {
-      server.close();
-    }
+  teardown(async function() {
+    await new Promise(accept => server.close(accept));
   });
 
-  function makeRequest(options, http, port, headers = {'Content-type': 'application/json'}) {
+  function makeRequest(options, headers = {'Content-type': 'application/json'}) {
     return new Promise(function(accept, reject) {
       let request = http.request({
         hostname: 'localhost',
-        port,
         path: '/request',
         method: 'POST',
       }, function(req, res) {
@@ -46,45 +35,61 @@ suite('server test', async function() {
     });
   }
 
-  for (let {protocol, port} of protocols) {
-    test('no hostname supplied', function() {
-      makeRequest({port: 80}, protocol, port).then(res => {
-        assert.equal(res.statusCode, 400);
-      });
+  test('no url supplied', function() {
+    makeRequest({port: 80}).then(res => {
+      assert.equal(res.statusCode, 400);
+    });
+  });
+
+  test('invalid parameter supplied', function() {
+    makeRequest({
+      url: 'http://www.mozila.org',
+      port: '80'
+    }).then(res => {
+      assert.equal(res.statusCode, 400);
     });
 
-    test('invalid parameter supplied', function() {
-      makeRequest({
-        hostname: 'www.mozila.org',
-        port: '80'
-      }, protocol, port).then(res => {
-        assert.equal(res.statusCode, 400);
-      });
+  });
 
+  test('no content-type header', function() {
+    let res = makeRequest({
+      url: 'http://www.mozila.org',
+    }, {}).then(res => {
+      assert.equal(res.statusCode, 400);
     });
+  });
 
-    test('no content-type header', function() {
-      let res = makeRequest({
-        hostname: 'www.mozila.org',
-      }, protocol, port, {}).then(res => {
-        assert.equal(res.statusCode, 400);
-      });
+  test('invalid content-type value', function() {
+    makeRequest({
+      url: 'http://www.mozila.org',
+    }, {'Content-type': 'text/plain'}).then(res => {
+      assert.equal(res.statusCode, 400);
     });
-
-    test('invalid content-type value', function() {
-      makeRequest({
-        hostname: 'www.mozila.org',
-      }, protocol, port, {'Content-type': 'text/plain'}).then(res => {
-        assert.equal(res.statusCode, 400);
-      });
-    });
-  }
+  });
 
   test('make a valid http request', function() {
     makeRequest({
-      hostname: 'tools.taskcluster.net'
-    }, http, httpPort).then(res => {
+      url: 'http://tools.taskcluster.net'
+    }).then(res => {
       assert.equal(res.statusCode, 302);
+    });
+  });
+
+  test('make a valid https request', function() {
+    makeRequest({
+      url: 'https://queue.taskcluster.net/v1/ping'
+    }).then(res => {
+      let text = '';
+
+      res.on('data', chunk => {
+        text += chunk;
+      });
+
+      res.on('end', () => {
+        const json = JSON.parse(text);
+        assert.ok(json.alive !== undefined);
+        assert.ok(json.uptime !== undefined);
+      });
     });
   });
 });

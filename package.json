@@ -30,6 +30,7 @@
     "body-parser": "^1.15.0",
     "debug": "^2.2.0",
     "express": "^4.13.4",
+    "express-sslify": "^1.0.1",
     "express-validation": "^0.4.5"
   }
 }
