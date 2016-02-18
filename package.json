@@ -27,6 +27,7 @@
     "mocha": "^2.4.5"
   },
   "dependencies": {
+    "babel": "^5.0.9",
     "body-parser": "^1.15.0",
     "debug": "^2.2.0",
     "express": "^4.13.4",
