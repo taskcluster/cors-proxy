@@ -1,95 +1,78 @@
-
 suite('server test', async function() {
-  const proxyServer = require('../server');
   const http = require('http');
   const assert = require('assert');
+  const helper = require('./helper');
 
-  const port = 3000;
-
-  let server;
-
-  setup(async function() {
-    server = await proxyServer.run(port);
-  });
-
-  teardown(async function() {
-    await new Promise(accept => server.close(accept));
-  });
-
-  function makeRequest(options, headers = {'Content-type': 'application/json'}) {
+  function  makeRequest(options, headers = {'Content-type': 'application/json'}) {
     return new Promise(function(accept, reject) {
       let request = http.request({
         hostname: 'localhost',
+        port: helper.PORT,
         path: '/request',
         method: 'POST',
-      }, function(req, res) {
-        debug(`Request to ${options.hostname} return ${res.status}`);
+        headers,
+      }, function(res) {
         accept(res);
       });
 
       request.on('error', reject);
       request.write(JSON.stringify(options));
       request.end();
-    }).catch(err => {
-      asssert.ok(false, err);
     });
   }
 
-  test('no url supplied', function() {
-    makeRequest({port: 80}).then(res => {
-      assert.equal(res.statusCode, 400);
-    });
+  test('no url supplied', async function() {
+    let res = await makeRequest({port: 80});
+    assert.equal(res.statusCode, 400);
   });
 
-  test('invalid parameter supplied', function() {
-    makeRequest({
+  test('invalid parameter supplied', async function() {
+    let res = await makeRequest({
       url: 'http://www.mozila.org',
-      port: '80'
-    }).then(res => {
-      assert.equal(res.statusCode, 400);
+      method: 'INVALID_METHOD'
     });
-
+    assert.equal(res.statusCode, 400);
   });
 
-  test('no content-type header', function() {
-    let res = makeRequest({
+  test('no content-type header', async function() {
+    const res = await makeRequest({
       url: 'http://www.mozila.org',
-    }, {}).then(res => {
-      assert.equal(res.statusCode, 400);
-    });
+    }, {});
+    assert.equal(res.statusCode, 400);
   });
 
-  test('invalid content-type value', function() {
-    makeRequest({
+  test('invalid content-type value', async function() {
+    const res = await makeRequest({
       url: 'http://www.mozila.org',
-    }, {'Content-type': 'text/plain'}).then(res => {
-      assert.equal(res.statusCode, 400);
-    });
+    }, {'Content-type': 'text/plain'});
+    assert.equal(res.statusCode, 400);
   });
 
-  test('make a valid http request', function() {
-    makeRequest({
+  test('make a valid http request', async function() {
+    const res = await makeRequest({
       url: 'http://tools.taskcluster.net'
-    }).then(res => {
-      assert.equal(res.statusCode, 302);
     });
+    assert.equal(res.statusCode, 301);
   });
 
-  test('make a valid https request', function() {
-    makeRequest({
+  test('make a valid https request', async function() {
+    const res = await makeRequest({
       url: 'https://queue.taskcluster.net/v1/ping'
-    }).then(res => {
+    });
+
+    const jsonReply = await new Promise(function(accept) {
       let text = '';
+
+      res.on('end', () => {
+        accept(JSON.parse(text));
+      });
 
       res.on('data', chunk => {
         text += chunk;
       });
-
-      res.on('end', () => {
-        const json = JSON.parse(text);
-        assert.ok(json.alive !== undefined);
-        assert.ok(json.uptime !== undefined);
-      });
     });
+
+    assert.ok(jsonReply.alive !== undefined);
+    assert.ok(jsonReply.uptime !== undefined);
   });
 });

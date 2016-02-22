@@ -15,7 +15,7 @@ const RequestSchema = {
     method: joi.string().optional().valid(
       'GET', 'POST', 'DELETE', 'PUT', 'OPTIONS', 'TRACE', 'PATCH'),
     headers: joi.object().optional().pattern(/.+/, joi.string()),
-    data: joi.string().optional()
+    data: joi.string().allow('').default('').optional()
   },
   headers: {
     'content-type': joi.string().required().valid('application/json')
@@ -63,7 +63,7 @@ function requestHandler(req, res) {
     res.status(sc);
 
     if (requestResponse.statusCode != 200) {
-      debug(`Request to ${req.body.hostname} returned status code ${sc}`);
+      debug(`Request to ${req.body.url} returned status code ${sc}`);
     }
 
     res.set(requestResponse.headers);
@@ -102,9 +102,6 @@ export function run(port = 80) {
 
     app.use(bodyParser.json());
     app.post('/request', validate(RequestSchema), requestHandler);
-    app.use(function(err, req, res, next) {
-      reportError(res, 500, err);
-    });
 
     const server = http.createServer(app);
 
