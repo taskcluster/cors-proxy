@@ -22,6 +22,15 @@ const RequestSchema = {
   }
 };
 
+function reportError(res, statusCode, err) {
+  debug(err);
+
+  try {
+    res.status(statusCode).send(`${err.stack}`);
+  } catch (e) {
+  }
+}
+
 // Handle proxy requests
 function requestHandler(req, res) {
   let {
@@ -68,16 +77,14 @@ function requestHandler(req, res) {
     });
 
     res.on('error', function(err) {
-      debug(`Fail to read response: ${err}`);
-      res.status(500).json(err);
-      res.end();
+      reportError(res, 500, err);
     });
 
     requestResponse.pipe(res);
   });
 
   request.on('error', function(err) {
-    res.status(500).json(err);
+    reportError(res, 500, err);
   });
 
   request.write(req.body.data);
@@ -96,7 +103,7 @@ export function run(port = 80) {
     app.use(bodyParser.json());
     app.post('/request', validate(RequestSchema), requestHandler);
     app.use(function(err, req, res, next) {
-      res.status(400).json(err);
+      reportError(res, 500, err);
     });
 
     const server = http.createServer(app);
