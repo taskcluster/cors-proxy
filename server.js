@@ -7,6 +7,7 @@ const joi = require('joi');
 const validate = require('express-validation');
 const sslify = require('express-sslify');
 const debug = require('debug')('cors-proxy:server');
+const morganDebug = require('morgan-debug');
 
 // Schema for json request and http headers
 const RequestSchema = {
@@ -100,6 +101,7 @@ export function run(port = 80) {
       app.use(sslify.HTTPS({trustProtoHeader: true}));
     }
 
+    app.use(morganDebug('cors-proxy:server', 'combined'));
     app.use(bodyParser.json());
     app.post('/request', validate(RequestSchema), requestHandler);
 
