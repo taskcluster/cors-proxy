@@ -33,6 +33,7 @@
     "express": "^4.13.4",
     "express-sslify": "^1.0.1",
     "express-validation": "^0.4.5",
+    "html-entities": "^1.2.0",
     "morgan-debug": "^1.0.0"
   }
 }

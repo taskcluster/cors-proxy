@@ -36,3 +36,11 @@ headers              | Additional http headers to send
 data                 | Body text
 rejectUnauthorized   | Reject if the https certifcate is not valid. Default: `true`.
 
+#### Exposing headers
+
+By default, the browser allows Javascript code access to only a small set of
+response headers. If you want to access one or more headers denied by default,
+you can use the `X-Cors-Proxy-Expose-Headers` header. You set it to the list of
+headers you want to access, separate by comma. On response, the cors-proxy will
+set the [Access-Control-Expose-Headers]() header with the list you passed.
+

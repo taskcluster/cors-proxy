@@ -9,6 +9,8 @@ const sslify = require('express-sslify');
 const debug = require('debug')('cors-proxy:server');
 const morganDebug = require('morgan-debug');
 
+const NODE_ENV = process.env.NODE_ENV || 'developemnt';
+
 // Schema for json request and http headers
 const RequestSchema = {
   body: {
@@ -20,9 +22,48 @@ const RequestSchema = {
     rejectUnauthorized: joi.boolean().optional().default(true)
   },
   headers: {
+    origin: joi.string().uri().required(),
     'content-type': joi.string().required().valid('application/json')
   }
 };
+
+const PreflightSchema = {
+  headers: {
+    origin: joi.string().uri().required()
+  }
+};
+
+function setupCORS(req, res) {
+  if (NODE_ENV === 'production') {
+    const origin = req.headers['Origin'];
+    const host = urlParse(origin).host;
+
+    // Check if we are under taskcluster domain
+    if (!/[a-zA-z0-9_.]\.taskcluster\.net/i.test(host)) {
+      debug(`${origin} is not a Taskcluster domain`);
+      return;
+    }
+
+    res.set('Access-Control-Allow-Origin', origin);
+  } else {
+    // In development mode, let all request be allowed
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+
+  res.set('Access-Control-Request-Method',
+    'GET POST HEAD OPTIONS PUT DELETE TRACE CONNECT');
+
+  const accessControlRequestHeaders = req.headers['access-control-request-headers'];
+  if (accessControlRequestHeaders) {
+    res.set('Access-Control-Allow-Headers', accessControlRequestHeaders);
+  }
+
+  const exposeHeaders = req.headers['x-cors-proxy-expose-headers'];
+
+  if (exposeHeaders) {
+    res.set('Access-Control-Expose-Headers', exposeHeaders);
+  }
+}
 
 function reportError(res, statusCode, err) {
   debug(err);
@@ -54,7 +95,7 @@ function requestHandler(req, res) {
     hostname: url.hostname,
     protocol: url.protocol,
     port: url.port,
-    path: url.path + url.search,
+    path: url.path,
     auth: url.auth,
     rejectUnauthorized,
     method,
@@ -71,10 +112,7 @@ function requestHandler(req, res) {
     }
 
     res.set(requestResponse.headers);
-
-    // This header will allow sites under taskcluster.net domain
-    // to receive the response from the proxy
-    res.set('Access-Control-Allow-Origin', 'https://*.taskcluster.net');
+    setupCORS(req, res);
 
     res.on('finish', function() {
       res.end();
@@ -95,18 +133,23 @@ function requestHandler(req, res) {
   request.end();
 }
 
-export function run(port = 80) {
+export default function proxyServer(port = 80) {
   return new Promise(async function(accept, reject) {
     const app = express();
 
-    const nodeEnv = process.env.NODE_ENV || 'developemnt';
-    if (nodeEnv === 'production') {
+    if (NODE_ENV === 'production') {
       app.use(sslify.HTTPS({trustProtoHeader: true}));
     }
 
     app.use(morganDebug('cors-proxy:server', 'combined'));
     app.use(bodyParser.json());
     app.post('/request', validate(RequestSchema), requestHandler);
+
+    // preflight request
+    app.options('/request', validate(PreflightSchema), function(req, res) {
+      setupCORS(req, res);
+      res.status(200).end();
+    });
 
     const server = http.createServer(app);
 
@@ -118,7 +161,7 @@ export function run(port = 80) {
 }
 
 if (!module.parent) {
-  run(process.env.PORT).catch(err => {
+  proxyServer(process.env.PORT).catch(err => {
     console.err(err.stack);
   });
 }
