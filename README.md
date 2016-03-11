@@ -28,10 +28,11 @@ $.ajax({
 
 The request accepts the following parameters, from which only `url` is required.
 
-Paramater    | Description
--------------|------------
-url          | Remote URL to connect to
-method       | One of the http standards [verbs](https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html)
-headers      | Additional http headers to send
-data         | Body text
+Paramater            | Description
+---------------------|------------
+url                  | Remote URL to connect to
+method               | One of the http standards [verbs](https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html)
+headers              | Additional http headers to send
+data                 | Body text
+rejectUnauthorized   | Reject if the https certifcate is not valid. Default: `true`.
 

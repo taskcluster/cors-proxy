@@ -16,7 +16,8 @@ const RequestSchema = {
     method: joi.string().optional().valid(
       'GET', 'POST', 'DELETE', 'PUT', 'OPTIONS', 'TRACE', 'PATCH'),
     headers: joi.object().optional().pattern(/.+/, joi.string()),
-    data: joi.string().allow('').default('').optional()
+    data: joi.string().allow('').default('').optional(),
+    rejectUnauthorized: joi.boolean().optional().default(true)
   },
   headers: {
     'content-type': joi.string().required().valid('application/json')
@@ -36,6 +37,7 @@ function reportError(res, statusCode, err) {
 function requestHandler(req, res) {
   let {
     url,
+    rejectUnauthorized,
     method = undefined,
     headers = undefined,
     data = ''
@@ -54,6 +56,7 @@ function requestHandler(req, res) {
     port: url.port,
     path: url.path + url.search,
     auth: url.auth,
+    rejectUnauthorized,
     method,
     headers,
   }, function(requestResponse) {

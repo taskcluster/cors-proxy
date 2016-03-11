@@ -57,7 +57,8 @@ suite('server test', async function() {
 
   test('make a valid https request', async function() {
     const res = await makeRequest({
-      url: 'https://queue.taskcluster.net/v1/ping'
+      url: 'https://queue.taskcluster.net/v1/ping',
+      rejectUnauthorized: false
     });
 
     const jsonReply = await new Promise(function(accept) {
