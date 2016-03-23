@@ -3,6 +3,7 @@ suite('server test', async function() {
   const assert = require('assert');
   const helper = require('./helper');
   const Entities = require('html-entities').AllHtmlEntities;
+  const checkDomain = require('../server').checkDomain;
 
   const entities = new Entities();
 
@@ -37,6 +38,12 @@ suite('server test', async function() {
       });
     }).then(body => entities.decode(body));
   }
+
+  test('check domain', function() {
+    assert.equal(checkDomain('tools.taskcluster.net'), true);
+    assert.equal(checkDomain('status.taskcluster.net'), true);
+    assert.equal(checkDomain('public-artifacts.taskcluster.net'), false);
+  });
 
   test('no url supplied', async function() {
     let res = await makeRequest({port: 80});

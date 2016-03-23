@@ -1,5 +1,5 @@
 const mocha = require('mocha');
-const proxyServer = require('../server');
+const proxyServer = require('../server').proxyServer;
 const fakeWebServer = require('./fake_webserver');
 const debug = require('debug')('cors-proxy:mocha');
 
