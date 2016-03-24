@@ -9,7 +9,12 @@ const sslify = require('express-sslify');
 const debug = require('debug')('cors-proxy:server');
 const morganDebug = require('morgan-debug');
 
-const NODE_ENV = process.env.NODE_ENV || 'developemnt';
+const ORIGIN_WHITELIST = [
+  'tools.taskcluster.net',
+  'status.taskcluster.net'
+];
+
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Schema for json request and http headers
 const RequestSchema = {
@@ -33,14 +38,17 @@ const PreflightSchema = {
   }
 };
 
+export function checkDomain(host) {
+  return ORIGIN_WHITELIST.some(domain => domain == host);
+}
+
 function setupCORS(req, res) {
   if (NODE_ENV === 'production') {
     const origin = req.headers['Origin'];
     const host = urlParse(origin).host;
 
-    // Check if we are under taskcluster domain
-    if (!/[a-zA-z0-9_.]\.taskcluster\.net/i.test(host)) {
-      debug(`${origin} is not a Taskcluster domain`);
+    if (!checkDomain(host)) {
+      debug(`${origin} is not a valid Taskcluster domain`);
       return;
     }
 
@@ -133,7 +141,7 @@ function requestHandler(req, res) {
   request.end();
 }
 
-export default function proxyServer(port = 80) {
+export function proxyServer(port = 80) {
   return new Promise(async function(accept, reject) {
     const app = express();
 
