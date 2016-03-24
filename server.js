@@ -14,7 +14,7 @@ const ORIGIN_WHITELIST = [
   'status.taskcluster.net'
 ];
 
-const NODE_ENV = process.env.NODE_ENV || 'developemnt';
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Schema for json request and http headers
 const RequestSchema = {
