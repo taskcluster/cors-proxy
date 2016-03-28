@@ -44,7 +44,7 @@ export function checkDomain(host) {
 
 function setupCORS(req, res) {
   if (NODE_ENV === 'production') {
-    const origin = req.headers['Origin'];
+    const origin = req.headers.origin;
     const host = urlParse(origin).host;
 
     if (!checkDomain(host)) {
