@@ -11,7 +11,8 @@ const morganDebug = require('morgan-debug');
 
 const ORIGIN_WHITELIST = [
   'tools.taskcluster.net',
-  'status.taskcluster.net'
+  'status.taskcluster.net',
+  'docs.taskcluster.net'
 ];
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
